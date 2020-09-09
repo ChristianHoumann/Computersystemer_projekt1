@@ -10,6 +10,34 @@
 unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 
+// combines r-g-b pixels to singular gray pixel
+void convertToGray() {
+
+}
+
+// Make image binary meaning alle colors are either 0=black or 1=white
+// use threshold aroud 90
+void applyBinaryThreshold() {
+
+}
+
+// take the input image and run though it with a predefined shape removing pixels
+// save the new image in another memory slot.
+void ErodeImg() {
+
+}
+
+// use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remeber its
+// center (coordinates) and remove the cell from the image.
+void DetectSpots() {
+
+}
+
+//take original image and put red x on all coordinates
+void constructOutputImg() {
+
+}
+
 //Main function
 int main(int argc, char** argv) {
   //argc counts how may arguments are passed
@@ -28,7 +56,7 @@ int main(int argc, char** argv) {
 
   //Run operations here
   
-  
+
 
   //Save image to file
   write_bitmap(output_image, argv[2]);
