@@ -1,6 +1,6 @@
 
 //To compile (win): gcc cbmp.c cellCounter.c -o cellCounter.exe -std=c99
-//To run (win): ./cellCounter.exe example.bmp example_result.bmp
+//To run (win): ./cellCounter.exe samples/easy/1EASY.bmp example_result1.bmp
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -310,6 +310,7 @@ int main(int argc, char **argv)
     convertToGray(input_image, binary_image);
     applyBinaryThreshold(binary_image);
 
+    
     while (1)
     {
         ErodeImg(binary_image);
