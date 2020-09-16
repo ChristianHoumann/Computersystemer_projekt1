@@ -8,6 +8,8 @@
 #include <time.h>
 // #include "convertToBinary.c"
 
+#define coordinateSize 420
+
 
 //Declaring the array to store the image (unsigned char = unsigned 8 bit)
 // union myUnion
@@ -21,12 +23,11 @@ unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH];
 
-int coordinates[420][2];
+int coordinates[coordinateSize][2];
 
 int cellCount = 0;
-int threshold = 90;
+int threshold = 95;
 int eroded = 1;
-int flip = 1;
 
 // combines r-g-b pixels to singular gray pixel
 void convertToGray(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
@@ -105,13 +106,29 @@ void ErodeImg(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
         {
             if (binary_image[x][y] == 255)
             {
-                if (flip && (binary_image[x + 1][y] == 0 || binary_image[x - 1][y] == 0 || binary_image[x][y + 1] == 0 || binary_image[x][y - 1] == 0))
+                unsigned char WhiteCounter = 0;
+
+                for (int x1 = x-1; x1 < x+1; x1++)
                 {
-                    tmp_image[x][y] = 0;
-                    eroded = 1;
+                    if (binary_image[x1][y-1] == 255)
+                    {
+                        WhiteCounter++;
+                    }
+                    if (binary_image[x1][y+1] == 255)
+                    {
+                        WhiteCounter++;
+                    }
+                    
                 }
-                else if (!flip && (binary_image[x + 1][y+1] == 0 || binary_image[x - 1][y-1] == 0 || binary_image[x-1][y + 1] == 0 || binary_image[x+1][y - 1] == 0))
-                {
+
+                if (binary_image[x-1][y] == 255) {
+                    WhiteCounter++;
+                }
+                if (binary_image[x+1][y] == 255) {
+                    WhiteCounter++;
+                }
+
+                if (WhiteCounter <= 5) {
                     tmp_image[x][y] = 0;
                     eroded = 1;
                 }
@@ -126,21 +143,15 @@ void ErodeImg(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
             binary_image[x][y] = tmp_image[x][y];
         }
     }
-
-    if (flip) {
-        flip = 1;
-    } else {
-        flip = 1;
-    }
 }
 
 // use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remeber its
 // center (coordinates) and remove the cell from the image.
-void DetectSpots(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], int coordinates[420][2])
+void DetectSpots(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], int coordinates[coordinateSize][2])
 {
-    for (int x = 0; x < BMP_WIDTH - 13; x+=4)
+    for (int x = 0; x < BMP_WIDTH - 13; x+=2)
     {
-        for (int y = 0; y < BMP_HEIGTH - 13; y+=4)
+        for (int y = 0; y < BMP_HEIGTH - 13; y+=2)
         {
             int whiteFoundEdge = 0;
             for (int x1 = x; x1 < x + 15; x1++)
@@ -227,7 +238,7 @@ void makeRedCross(unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS
 
 //take original image and put red x on all coordinates
 void constructOutputImg(unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS] ,unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS] 
-                        ,int coordinates[420][2])
+                        ,int coordinates[coordinateSize][2])
 {
     for (int x = 0; x < BMP_WIDTH; x++)
     {
@@ -246,7 +257,7 @@ void constructOutputImg(unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CH
     }
 }
 
-void coordinateComparison (int coordinates[420][2]) 
+void coordinateComparison (int coordinates[coordinateSize][2])
 {
     for (int x = 0; x < cellCount; x++)
     {
@@ -263,7 +274,6 @@ void coordinateComparison (int coordinates[420][2])
 
             }
         }
-        
 
     }
     
@@ -309,10 +319,22 @@ int main(int argc, char **argv)
         }
         DetectSpots(binary_image, coordinates);
     }
+
+    // for (int i = 0; i < 40; i++)
+    // {
+    //     ErodeImg(binary_image);
+    //     if (!eroded)
+    //     {
+    //         break;
+    //     }
+    //     DetectSpots(binary_image, coordinates);
+    // }
+    
+
     
     printf( "%d\n", cellCount);
     constructOutputImg(output_image, input_image, coordinates);
-    // tmpBinaryOut(binary_image, output_image);
+    //tmpBinaryOut(binary_image, output_image);
 
     //Save image to file
     //and print coordinates and cellcount here
