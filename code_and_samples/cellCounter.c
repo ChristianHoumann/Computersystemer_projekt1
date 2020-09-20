@@ -1,6 +1,6 @@
 
 //To compile (win): gcc cbmp.c cellCounter.c -o cellCounter.exe -std=c99
-//To run (win): ./cellCounter.exe samples/easy/1EASY.bmp example_result1.bmp
+//To run (win): ./cellCounter.exe example.bmp example_result.bmp
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -205,7 +205,38 @@ void DetectSpots(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], int coordina
 }
 
 void makeRedCross(unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS],int x, int y) 
-{
+{   
+    int x1 = x-5;
+    int y1 = y-5;
+    while(x1 <= x+5 && y1 <= y+5) 
+    {
+        output_image[x1][y+1][0] = 255;
+        output_image[x1][y][0] = 255;
+        output_image[x1][y-1][0] = 255;
+
+        for (int c = 1; c < BMP_CHANNELS; c++)
+        {
+            output_image[x1][y+1][c] = 0;
+            output_image[x1][y][c] = 0;
+            output_image[x1][y-1][c] = 0;
+        }
+
+        if(y1 < y-1 || y1 > y+1) {
+            output_image[x+1][y1][0] = 255;
+            output_image[x][y1][0] = 255;
+            output_image[x-1][y1][0] = 255;
+
+            for (int c = 1; c < BMP_CHANNELS; c++)
+            {
+                output_image[x+1][y1][c] = 0;
+                output_image[x][y1][c] = 0;
+                output_image[x-1][y1][c] = 0;
+            }
+        }
+        x1++;
+        y1++;
+    }
+    /*
     for (int x1 = x-5; x1 <= x+5 ; x1++)
     {
         output_image[x1][y+1][0] = 255;
@@ -221,7 +252,7 @@ void makeRedCross(unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS
     }
 
     for (int y1 = y-5; y1 <=y+5 ; y1++)
-    {
+    {   
         output_image[x+1][y1][0] = 255;
         output_image[x][y1][0] = 255;
         output_image[x-1][y1][0] = 255;
@@ -233,7 +264,7 @@ void makeRedCross(unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS
             output_image[x-1][y1][c] = 0;
         }
     }
-    
+    */
 }
 
 //take original image and put red x on all coordinates
@@ -310,7 +341,6 @@ int main(int argc, char **argv)
     convertToGray(input_image, binary_image);
     applyBinaryThreshold(binary_image);
 
-    
     while (1)
     {
         ErodeImg(binary_image);
