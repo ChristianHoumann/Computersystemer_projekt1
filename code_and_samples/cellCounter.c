@@ -11,9 +11,9 @@
 #define coordinateSize 1000
 #define bit_width 30
 
-#define SetBit(A,k,y)     (A[(k/32)][y] |= (1 << (k%32)))  
-#define ClearBit(A,k,y)   (A[(k/32)][y] &= ~(1 << (k%32)))  
-#define TestBit(A,k,y)    (A[(k/32)][y] & (1 << (k%32)))
+#define SetBit(A,x,y)     (A[(x/32)][y] |= (1 << (x%32)))
+#define ClearBit(A,x,y)   (A[(x/32)][y] &= ~(1 << (x%32)))  
+#define TestBit(A,x,y)    (A[(x/32)][y] & (1 << (x%32)))
 
 
 //Declaring the array to store the image (unsigned char = unsigned 8 bit)
@@ -26,17 +26,17 @@
 
 unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
-unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH];
+unsigned int binary_image[bit_width][BMP_HEIGTH];
 
 int coordinates[coordinateSize][2];
 
 int cellCount = 0;
-int threshold = 95;
-int eroded = 1;
+unsigned char threshold = 95;
+unsigned char eroded = 1;
 
 // combines r-g-b pixels to singular gray pixel.
 // Then make image binary meaning alle colors are either 0=black or 255=white
-void convertToBinary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
+void convertToBinary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned int binary_image[bit_width][BMP_HEIGTH])
 {
     unsigned char tmpGray;
     for (int x = 0; x < BMP_WIDTH; x++)
@@ -46,11 +46,11 @@ void convertToBinary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
             tmpGray = (input_image[x][y][0] + input_image[x][y][1] + input_image[x][y][2]) / 3;
             if (tmpGray < threshold)
             {
-                binary_image[x][y] = 0;
+                ClearBit(binary_image,x,y);
             }
             else
             {
-                binary_image[x][y] = 255;
+                SetBit(binary_image,x,y);
             }
         }
     }
@@ -58,15 +58,15 @@ void convertToBinary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
     //makes edge black
     for (int x = 0; x < BMP_WIDTH; x++)
     {
-        binary_image[x][0] = 0;
-        binary_image[0][x] = 0;
-        binary_image[x][BMP_HEIGTH - 1] = 0;
-        binary_image[BMP_HEIGTH - 1][x] = 0;
+        ClearBit(binary_image,x,0);
+        ClearBit(binary_image,0,x);
+        ClearBit(binary_image,x,(BMP_HEIGTH - 1));
+        ClearBit(binary_image,(BMP_HEIGTH - 1),x);
     }
 
 }
 
-void tmpBinaryOut(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS])
+void tmpBinaryOut(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS])
 {
     for (int x = 0; x < BMP_WIDTH; x++)
     {
@@ -74,7 +74,7 @@ void tmpBinaryOut(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], unsigned ch
         {
             for (int c = 0; c < BMP_CHANNELS; c++)
             {
-                output_image[x][y][c] = binary_image[x][y];
+               output_image[x][y][c] = TestBit(binary_image,x,y) ? 255 : 0;
             }
         }
     }
@@ -82,17 +82,17 @@ void tmpBinaryOut(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], unsigned ch
 
 // take the input image and run though it with a predefined shape removing pixels
 // save the new image in another memory slot.
-void ErodeImg(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
+void ErodeImg(unsigned int binary_image[bit_width][BMP_HEIGTH])
 {
     eroded = 0;
 
-    unsigned char tmp_image[BMP_WIDTH][BMP_HEIGTH];
+    unsigned int tmp_image[bit_width][BMP_HEIGTH];
 
     for (int x = 0; x < BMP_WIDTH; x++)
     {
         for (int y = 0; y < BMP_HEIGTH; y++)
         {
-            tmp_image[x][y] = binary_image[x][y];
+            TestBit(binary_image,x,y) ? SetBit(tmp_image,x,y) : ClearBit(tmp_image,x,y);
         }
     }
 
@@ -100,32 +100,32 @@ void ErodeImg(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
     {
         for (int y = 1; y < BMP_HEIGTH - 1; y++)
         {
-            if (binary_image[x][y] == 255)
+            if (TestBit(binary_image,x,y))
             {
                 unsigned char WhiteCounter = 0;
 
                 for (int x1 = x-1; x1 < x+1; x1++)
                 {
-                    if (binary_image[x1][y-1] == 255)
+                    if (TestBit(binary_image,x1,(y-1)))
                     {
                         WhiteCounter++;
                     }
-                    if (binary_image[x1][y+1] == 255)
+                    if (TestBit(binary_image,x1,(y+1)))
                     {
                         WhiteCounter++;
                     }
                     
                 }
 
-                if (binary_image[x-1][y] == 255) {
+                if (TestBit(binary_image,(x - 1),y)) {
                     WhiteCounter++;
                 }
-                if (binary_image[x+1][y] == 255) {
+                if (TestBit(binary_image,(x + 1),y)) {
                     WhiteCounter++;
                 }
 
                 if (WhiteCounter <= 5) {
-                    tmp_image[x][y] = 0;
+                    ClearBit(tmp_image,x,y);
                     eroded = 1;
                 }
             }
@@ -136,14 +136,14 @@ void ErodeImg(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
     {
         for (int y = 0; y < BMP_HEIGTH; y++)
         {
-            binary_image[x][y] = tmp_image[x][y];
+            TestBit(tmp_image,x,y) ? SetBit(binary_image,x,y) : ClearBit(binary_image,x,y);
         }
     }
 }
 
 // use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remeber its
 // center (coordinates) and remove the cell from the image.
-void DetectSpots(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], int coordinates[coordinateSize][2])
+void DetectSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinates[coordinateSize][2])
 {
     for (int x = 0; x < BMP_WIDTH - 13; x+=2)
     {
@@ -152,7 +152,7 @@ void DetectSpots(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], int coordina
             int whiteFoundEdge = 0;
             for (int x1 = x; x1 < x + 15; x1++)
             {
-                if (binary_image[x1][y] == 255 || binary_image[x1][y + 13] == 255)
+                if (TestBit(binary_image,x1,y) || TestBit(binary_image,x1,(y + 13)))
                 {
                     whiteFoundEdge = 1;
                     break;
@@ -162,7 +162,7 @@ void DetectSpots(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], int coordina
             {
                 for (int y1 = y; y1 < y + 15; y1++)
                 {
-                    if (binary_image[x][y1] == 255 || binary_image[x + 13][y1] == 255)
+                    if (TestBit(binary_image,x,y1) || TestBit(binary_image,(x + 13),y1))
                     {
                         whiteFoundEdge = 1;
                         break;
@@ -177,7 +177,7 @@ void DetectSpots(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], int coordina
                 {
                     for (int y1 = y+1; y1 < y+13; y1++)
                     {
-                        if (binary_image[x1][y1] == 255)
+                        if (TestBit(binary_image,x1,y1))
                         {
                             if (!whiteCellFound) {
                                 coordinates[cellCount][0] = x+7;
@@ -187,7 +187,7 @@ void DetectSpots(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], int coordina
                                 whiteCellFound = 1;
                             }
                             
-                            binary_image[x1][y1] = 0;
+                            ClearBit(binary_image,x1,y1);
                         }
                         
                     }
