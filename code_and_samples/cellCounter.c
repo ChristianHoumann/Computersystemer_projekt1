@@ -8,7 +8,12 @@
 #include <time.h>
 // #include "convertToBinary.c"
 
-#define coordinateSize 420
+#define coordinateSize 1000
+#define bit_width 30
+
+#define SetBit(A,k,y)     (A[(k/32)][y] |= (1 << (k%32)))  
+#define ClearBit(A,k,y)   (A[(k/32)][y] &= ~(1 << (k%32)))  
+#define TestBit(A,k,y)    (A[(k/32)][y] & (1 << (k%32)))
 
 
 //Declaring the array to store the image (unsigned char = unsigned 8 bit)
@@ -29,36 +34,17 @@ int cellCount = 0;
 int threshold = 95;
 int eroded = 1;
 
-// combines r-g-b pixels to singular gray pixel
-void convertToGray(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
+// combines r-g-b pixels to singular gray pixel.
+// Then make image binary meaning alle colors are either 0=black or 255=white
+void convertToBinary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
 {
+    unsigned char tmpGray;
     for (int x = 0; x < BMP_WIDTH; x++)
     {
         for (int y = 0; y < BMP_HEIGTH; y++)
         {
-            binary_image[x][y] = (input_image[x][y][0] + input_image[x][y][1] + input_image[x][y][2]) / 3;
-        }
-    }
-}
-
-// Make image binary meaning alle colors are either 0=black or 1=white
-// use threshold aroud 90
-void applyBinaryThreshold(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
-{
-    //makes edge black
-    for (int x = 0; x < BMP_WIDTH; x++)
-    {
-        binary_image[x][0] = 0;
-        binary_image[0][x] = 0;
-        binary_image[x][BMP_HEIGTH - 1] = 0;
-        binary_image[BMP_HEIGTH - 1][x] = 0;
-    }
-
-    for (int x = 0; x < BMP_WIDTH; x++)
-    {
-        for (int y = 0; y < BMP_HEIGTH; y++)
-        {
-            if (binary_image[x][y] < threshold)
+            tmpGray = (input_image[x][y][0] + input_image[x][y][1] + input_image[x][y][2]) / 3;
+            if (tmpGray < threshold)
             {
                 binary_image[x][y] = 0;
             }
@@ -68,6 +54,16 @@ void applyBinaryThreshold(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH])
             }
         }
     }
+
+    //makes edge black
+    for (int x = 0; x < BMP_WIDTH; x++)
+    {
+        binary_image[x][0] = 0;
+        binary_image[0][x] = 0;
+        binary_image[x][BMP_HEIGTH - 1] = 0;
+        binary_image[BMP_HEIGTH - 1][x] = 0;
+    }
+
 }
 
 void tmpBinaryOut(unsigned char binary_image[BMP_WIDTH][BMP_HEIGTH], unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS])
@@ -338,8 +334,7 @@ int main(int argc, char **argv)
     double cpu_time_used;
     start = clock();
     /* The code that has to be measured. */
-    convertToGray(input_image, binary_image);
-    applyBinaryThreshold(binary_image);
+    convertToBinary(input_image, binary_image);
 
     while (1)
     {
@@ -361,19 +356,18 @@ int main(int argc, char **argv)
     //     DetectSpots(binary_image, coordinates);
     // }
     
-
     
     printf( "%d\n", cellCount);
     constructOutputImg(output_image, input_image, coordinates);
     //tmpBinaryOut(binary_image, output_image);
 
-    //Save image to file
-    //and print coordinates and cellcount here
-    write_bitmap(output_image, argv[2]);
-    
     end = clock();
     cpu_time_used = end-start;
     printf("Total time: %f ms\n", cpu_time_used * 1000.0 /CLOCKS_PER_SEC);
+
+    //Save image to file
+    //and print coordinates and cellcount here
+    write_bitmap(output_image, argv[2]);
 
     //coordinateComparison(coordinates);
     printf("Done!\n");
