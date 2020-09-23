@@ -15,27 +15,27 @@
 #define ClearBit(A, x, y) (A[(x / 32)][y] &= ~(1 << (x % 32)))
 #define TestBit(A, x, y) (A[(x / 32)][y] & (1 << (x % 32)))
 
-unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
+unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 unsigned int binary_image1[bit_width][BMP_HEIGTH];
 unsigned int binary_image2[bit_width][BMP_HEIGTH];
 
 int coordinates[coordinateSize][2];
 
-int cellCount = 0;
+unsigned int cellCount = 0;
 unsigned char threshold = 95;
 unsigned char eroded = 1;
 unsigned char flip = 1;
 
 // combines r-g-b pixels to singular gray pixel.
 // Then make image binary meaning alle colors are either 0=black or 255=white
-void convertToBinary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned int binary_image1[bit_width][BMP_HEIGTH])
+void convertToBinary(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned int binary_image1[bit_width][BMP_HEIGTH])
 {
     unsigned char tmpGray;
     for (int x = 0; x < BMP_WIDTH; x++)
     {
         for (int y = 0; y < BMP_HEIGTH; y++)
         {
-            tmpGray = (input_image[x][y][0] + input_image[x][y][1] + input_image[x][y][2]) / 3;
+            tmpGray = (color_image[x][y][0] + color_image[x][y][1] + color_image[x][y][2]) / 3;
             if (tmpGray < threshold)
             {
                 ClearBit(binary_image1, x, y);
@@ -47,7 +47,7 @@ void convertToBinary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
         }
     }
 
-    //makes edge black
+    //makes the edge of the color image black
     for (int x = 0; x < BMP_WIDTH; x++)
     {
         ClearBit(binary_image1, x, 0);
@@ -57,7 +57,9 @@ void convertToBinary(unsigned char input_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
     }
 }
 
-void tmpBinaryOut(unsigned int binary_image1[bit_width][BMP_HEIGTH], unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS])
+
+// Makes a binary image to be output.
+void tmpBinaryOut(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS])
 {
     for (int x = 0; x < BMP_WIDTH; x++)
     {
@@ -65,7 +67,7 @@ void tmpBinaryOut(unsigned int binary_image1[bit_width][BMP_HEIGTH], unsigned ch
         {
             for (int c = 0; c < BMP_CHANNELS; c++)
             {
-                output_image[x][y][c] = TestBit(binary_image1, x, y) ? 255 : 0;
+                color_image[x][y][c] = TestBit(binary_image, x, y) ? 255 : 0;
             }
         }
     }
@@ -123,7 +125,16 @@ void ErodeImg(unsigned int binary_image1[bit_width][BMP_HEIGTH], unsigned int bi
         }
     }
 
+    //flips the flip
     flip ^= 1;
+    // for (int x = 0; x < BMP_WIDTH; x++)
+    // {
+    //     for (int y = 0; y < BMP_HEIGTH; y++)
+    //     {
+    //         TestBit(binary_image2, x, y) ? SetBit(binary_image1, x, y) : ClearBit(binary_image1, x, y);
+    //     }
+    // }
+
 }
 
 // use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remeber its
@@ -182,34 +193,34 @@ void DetectSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinat
     }
 }
 
-void makeRedCross(unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y)
+void makeRedCross(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int x, int y)
 {
     int x1 = x - 5;
     int y1 = y - 5;
     while (x1 <= x + 5 && y1 <= y + 5)
     {
-        output_image[x1][y + 1][0] = 255;
-        output_image[x1][y][0] = 255;
-        output_image[x1][y - 1][0] = 255;
+        color_image[x1][y + 1][0] = 255;
+        color_image[x1][y][0] = 255;
+        color_image[x1][y - 1][0] = 255;
 
         for (int c = 1; c < BMP_CHANNELS; c++)
         {
-            output_image[x1][y + 1][c] = 0;
-            output_image[x1][y][c] = 0;
-            output_image[x1][y - 1][c] = 0;
+            color_image[x1][y + 1][c] = 0;
+            color_image[x1][y][c] = 0;
+            color_image[x1][y - 1][c] = 0;
         }
 
         if (y1 < y - 1 || y1 > y + 1)
         {
-            output_image[x + 1][y1][0] = 255;
-            output_image[x][y1][0] = 255;
-            output_image[x - 1][y1][0] = 255;
+            color_image[x + 1][y1][0] = 255;
+            color_image[x][y1][0] = 255;
+            color_image[x - 1][y1][0] = 255;
 
             for (int c = 1; c < BMP_CHANNELS; c++)
             {
-                output_image[x + 1][y1][c] = 0;
-                output_image[x][y1][c] = 0;
-                output_image[x - 1][y1][c] = 0;
+                color_image[x + 1][y1][c] = 0;
+                color_image[x][y1][c] = 0;
+                color_image[x - 1][y1][c] = 0;
             }
         }
         x1++;
@@ -217,37 +228,16 @@ void makeRedCross(unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS
     }
 }
 
+
 //take original image and put red x on all coordinates
-void constructOutputImg(unsigned char output_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int coordinates[coordinateSize][2])
+void constructOutputImg(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int coordinates[coordinateSize][2])
 {
     for (int x = 0; x < cellCount; x++)
     {
-        makeRedCross(output_image, coordinates[x][0], coordinates[x][1]);
+        makeRedCross(color_image, coordinates[x][0], coordinates[x][1]);
     }
 }
 
-void coordinateComparison(int coordinates[coordinateSize][2])
-{
-    for (int x = 0; x < cellCount; x++)
-    {
-        for (int x1 = x + 1; x < cellCount; x1++)
-        {
-            if (coordinates[x][0] == coordinates[x1][0])
-            {
-                if (coordinates[x][1] == coordinates[x1][1])
-                {
-                    printf("REEEEEEEE!!!!!: (%d,%d)\n", coordinates[x][0], coordinates[x][1]);
-                }
-                else
-                {
-                    printf("yay");
-                }
-            }
-        }
-    }
-}
-
-//Main function
 int main(int argc, char **argv)
 {
     //argc counts how may arguments are passed
@@ -263,14 +253,14 @@ int main(int argc, char **argv)
     }
 
     //Load image from file
-    read_bitmap(argv[1], input_image);
+    read_bitmap(argv[1], color_image);
 
     //Run operations here
     clock_t start, end;
     double cpu_time_used;
     start = clock();
     /* The code that has to be measured. */
-    convertToBinary(input_image, binary_image1);
+    convertToBinary(color_image, binary_image1);
 
     while (1)
     {
@@ -305,7 +295,7 @@ int main(int argc, char **argv)
     // }
 
     printf("%d\n", cellCount);
-    constructOutputImg(input_image, coordinates);
+    constructOutputImg(color_image, coordinates);
     //tmpBinaryOut(binary_image, input_image);
 
     end = clock();
@@ -314,7 +304,7 @@ int main(int argc, char **argv)
 
     //Save image to file
     //and print coordinates and cellcount here
-    write_bitmap(input_image, argv[2]);
+    write_bitmap(color_image, argv[2]);
 
     //coordinateComparison(coordinates);
     printf("Done!\n");
