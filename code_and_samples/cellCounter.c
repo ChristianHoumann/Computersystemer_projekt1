@@ -9,7 +9,7 @@
 // #include "convertToBinary.c"
 
 #define coordinateSize 1000
-#define bit_width 30
+#define bit_width 30 // 32*30 = 960 we need at least 950
 
 #define SetBit(A, x, y) (A[(x / 32)][y] |= (1 << (x % 32)))
 #define ClearBit(A, x, y) (A[(x / 32)][y] &= ~(1 << (x % 32)))
@@ -56,7 +56,6 @@ void convertToBinary(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
         ClearBit(binary_image1, (BMP_HEIGTH - 1), x);
     }
 }
-
 
 // Makes a binary image to be output.
 void tmpBinaryOut(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS])
@@ -134,7 +133,33 @@ void ErodeImg(unsigned int binary_image1[bit_width][BMP_HEIGTH], unsigned int bi
     //         TestBit(binary_image2, x, y) ? SetBit(binary_image1, x, y) : ClearBit(binary_image1, x, y);
     //     }
     // }
+}
 
+// Check for white pixels (1) in the 14 by 14 exclusion frame.
+// Returns 1 if found and 0 if not.
+char isEdgeWhite(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned int x, unsigned int y)
+{
+    char whiteEdgeFound = 0;
+    for (int x1 = x; x1 < x + 15; x1++)
+    {
+        if (TestBit(binary_image, x1, y) || TestBit(binary_image, x1, (y + 13)))
+        {
+            whiteEdgeFound = 1;
+            break;
+        }
+    }
+    if (!whiteEdgeFound)
+    {
+        for (int y1 = y; y1 < y + 15; y1++)
+        {
+            if (TestBit(binary_image, x, y1) || TestBit(binary_image, (x + 13), y1))
+            {
+                whiteEdgeFound = 1;
+                break;
+            }
+        }
+    }
+    return whiteEdgeFound;
 }
 
 // use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remeber its
@@ -145,28 +170,7 @@ void DetectSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinat
     {
         for (int y = 0; y < BMP_HEIGTH - 13; y += 2)
         {
-            int whiteFoundEdge = 0;
-            for (int x1 = x; x1 < x + 15; x1++)
-            {
-                if (TestBit(binary_image, x1, y) || TestBit(binary_image, x1, (y + 13)))
-                {
-                    whiteFoundEdge = 1;
-                    break;
-                }
-            }
-            if (!whiteFoundEdge)
-            {
-                for (int y1 = y; y1 < y + 15; y1++)
-                {
-                    if (TestBit(binary_image, x, y1) || TestBit(binary_image, (x + 13), y1))
-                    {
-                        whiteFoundEdge = 1;
-                        break;
-                    }
-                }
-            }
-
-            if (!whiteFoundEdge)
+            if (!isEdgeWhite(binary_image,x,y))
             {
                 int whiteCellFound = 0;
                 for (int x1 = x + 1; x1 < x + 13; x1++)
@@ -227,7 +231,6 @@ void makeRedCross(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]
         y1++;
     }
 }
-
 
 //take original image and put red x on all coordinates
 void constructOutputImg(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int coordinates[coordinateSize][2])
