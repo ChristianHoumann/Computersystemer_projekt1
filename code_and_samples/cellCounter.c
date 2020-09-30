@@ -25,7 +25,7 @@ unsigned char threshold = 95;
 unsigned char eroded = 1;
 unsigned char flip = 1;
 
-// combines r-g-b pixels to singular gray pixel.
+// Combines r-g-b pixels to singular gray pixel.
 // Then make image binary meaning alle colors are either 0=black or 1=white
 void convertToBinary(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned int binary_image1[bit_width][BMP_HEIGTH])
 {
@@ -46,7 +46,7 @@ void convertToBinary(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNE
         }
     }
 
-    //makes the edge of the color image black
+    // Makes the edge of the color image black
     for (int x = 0; x < BMP_WIDTH; x++)
     {
         ClearBit(binary_image1, x, 0);
@@ -71,8 +71,8 @@ void tmpBinaryOut(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned cha
     }
 }
 
-// take the input image and run though it with a predefined shape removing pixels
-// save the new image in another memory slot.
+// Take the input image and run though it and count white pixels then removing pixels if criteria is met.
+// Save the new image in another memory slot.
 void ErodeImg(unsigned int binary_image1[bit_width][BMP_HEIGTH], unsigned int binary_image2[bit_width][BMP_HEIGTH])
 {
     eroded = 0;
@@ -154,7 +154,7 @@ char isEdgeWhite(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned int 
     return whiteEdgeFound;
 }
 
-// use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remeber its
+// Use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remember its
 // center (coordinates) and remove the cell from the image.
 void DetectSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinates[coordinateSize][2])
 {
@@ -249,11 +249,6 @@ int main(int argc, char **argv)
 
     //Load image from file
     read_bitmap(argv[1], color_image);
-
-    //Run operations here
-    clock_t start, end;
-    double cpu_time_used;
-    start = clock();
     
     convertToBinary(color_image, binary_image1);
 
@@ -281,10 +276,6 @@ int main(int argc, char **argv)
 
     printf("The cellcount is: %d\n", cellCount);
     constructOutputImg(color_image, coordinates);
-
-    end = clock();
-    cpu_time_used = end - start;
-    printf("Total time: %f ms\n", cpu_time_used * 1000.0 / CLOCKS_PER_SEC);
 
     //Save image to file
     //and print coordinates and cellcount here
