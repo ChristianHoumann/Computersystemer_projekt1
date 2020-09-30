@@ -18,7 +18,7 @@ unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS];
 unsigned int binary_image1[bit_width][BMP_HEIGTH];
 unsigned int binary_image2[bit_width][BMP_HEIGTH];
 
-int coordinates[coordinateSize][2];
+unsigned short coordinates[coordinateSize][2];
 
 unsigned int cellCount = 0;
 unsigned char threshold = 95;
@@ -156,7 +156,7 @@ char isEdgeWhite(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned int 
 
 // Use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remember its
 // center (coordinates) and remove the cell from the image.
-void detectAndRemoveSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinates[coordinateSize][2])
+void detectAndRemoveSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned short coordinates[coordinateSize][2])
 {
     for (int x = 0; x < BMP_WIDTH - 13; x += 2)
     {
@@ -226,7 +226,7 @@ void makeRedCross(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]
 }
 
 // Take original image and put red x on all coordinates
-void constructOutputImg(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int coordinates[coordinateSize][2])
+void constructOutputImg(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned short coordinates[coordinateSize][2])
 {
     for (int x = 0; x < cellCount; x++)
     {
@@ -250,6 +250,10 @@ int main(int argc, char **argv)
 
     //Load image from file
     read_bitmap(argv[1], color_image);
+
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
     
     convertToBinary(color_image, binary_image1);
 
@@ -277,6 +281,10 @@ int main(int argc, char **argv)
 
     printf("The cellcount is: %d\n", cellCount);
     constructOutputImg(color_image, coordinates);
+
+    end = clock();
+    cpu_time_used = end - start;
+    printf("Total time: %f ms\n", cpu_time_used * 1000.0 / CLOCKS_PER_SEC);
 
     //Save image to file
     //and print coordinates and cellcount here
