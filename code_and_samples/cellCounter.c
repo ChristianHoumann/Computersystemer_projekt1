@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include "cbmp.h"
 #include <time.h>
-// #include "convertToBinary.c"
 
 #define coordinateSize 1000
 #define bit_width 30 // 32*30 = 960 we need at least 950
@@ -27,7 +26,7 @@ unsigned char eroded = 1;
 unsigned char flip = 1;
 
 // combines r-g-b pixels to singular gray pixel.
-// Then make image binary meaning alle colors are either 0=black or 255=white
+// Then make image binary meaning alle colors are either 0=black or 1=white
 void convertToBinary(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], unsigned int binary_image1[bit_width][BMP_HEIGTH])
 {
     unsigned char tmpGray;
@@ -126,13 +125,6 @@ void ErodeImg(unsigned int binary_image1[bit_width][BMP_HEIGTH], unsigned int bi
 
     //flips the flip
     flip ^= 1;
-    // for (int x = 0; x < BMP_WIDTH; x++)
-    // {
-    //     for (int y = 0; y < BMP_HEIGTH; y++)
-    //     {
-    //         TestBit(binary_image2, x, y) ? SetBit(binary_image1, x, y) : ClearBit(binary_image1, x, y);
-    //     }
-    // }
 }
 
 // Check for white pixels (1) in the 14 by 14 exclusion frame.
@@ -232,7 +224,7 @@ void makeRedCross(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS]
     }
 }
 
-//take original image and put red x on all coordinates
+// Take original image and put red x on all coordinates
 void constructOutputImg(unsigned char color_image[BMP_WIDTH][BMP_HEIGTH][BMP_CHANNELS], int coordinates[coordinateSize][2])
 {
     for (int x = 0; x < cellCount; x++)
@@ -262,7 +254,7 @@ int main(int argc, char **argv)
     clock_t start, end;
     double cpu_time_used;
     start = clock();
-    /* The code that has to be measured. */
+    
     convertToBinary(color_image, binary_image1);
 
     while (1)
@@ -287,19 +279,8 @@ int main(int argc, char **argv)
         }
     }
 
-    // for (int i = 0; i < 40; i++)
-    // {
-    //     ErodeImg(binary_image);
-    //     if (!eroded)
-    //     {
-    //         break;
-    //     }
-    //     DetectSpots(binary_image, coordinates);
-    // }
-
-    printf("%d\n", cellCount);
+    printf("The cellcount is: %d\n", cellCount);
     constructOutputImg(color_image, coordinates);
-    //tmpBinaryOut(binary_image, input_image);
 
     end = clock();
     cpu_time_used = end - start;
