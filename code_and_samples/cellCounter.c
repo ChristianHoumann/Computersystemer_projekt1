@@ -73,7 +73,7 @@ void tmpBinaryOut(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned cha
 
 // Take the input image and run though it and count white pixels then removing pixels if criteria is met.
 // Save the new image in another memory slot.
-void ErodeImg(unsigned int binary_image1[bit_width][BMP_HEIGTH], unsigned int binary_image2[bit_width][BMP_HEIGTH])
+void erodeImg(unsigned int binary_image1[bit_width][BMP_HEIGTH], unsigned int binary_image2[bit_width][BMP_HEIGTH])
 {
     eroded = 0;
 
@@ -156,7 +156,7 @@ char isEdgeWhite(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned int 
 
 // Use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remember its
 // center (coordinates) and remove the cell from the image.
-void DetectandRemoveSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinates[coordinateSize][2])
+void detectAndRemoveSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinates[coordinateSize][2])
 {
     for (int x = 0; x < BMP_WIDTH - 13; x += 2)
     {
@@ -257,21 +257,21 @@ int main(int argc, char **argv)
     {
         if (flip)
         {
-            ErodeImg(binary_image1, binary_image2);
+            erodeImg(binary_image1, binary_image2);
             if (!eroded)
             {
                 break;
             }
-            DetectandRemoveSpots(binary_image2, coordinates);
+            detectAndRemoveSpots(binary_image2, coordinates);
         }
         else
         {
-            ErodeImg(binary_image2, binary_image1);
+            erodeImg(binary_image2, binary_image1);
             if (!eroded)
             {
                 break;
             }
-            DetectandRemoveSpots(binary_image1, coordinates);
+            detectAndRemoveSpots(binary_image1, coordinates);
         }
     }
 
