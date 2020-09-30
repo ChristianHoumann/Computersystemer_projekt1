@@ -156,7 +156,7 @@ char isEdgeWhite(unsigned int binary_image[bit_width][BMP_HEIGTH], unsigned int 
 
 // Use capturing area of 12-12 pixels and a 14-14 exclusion frame around, when a cell is detected count it and remember its
 // center (coordinates) and remove the cell from the image.
-void DetectSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinates[coordinateSize][2])
+void DetectandRemoveSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinates[coordinateSize][2])
 {
     for (int x = 0; x < BMP_WIDTH - 13; x += 2)
     {
@@ -164,6 +164,7 @@ void DetectSpots(unsigned int binary_image[bit_width][BMP_HEIGTH], int coordinat
         {
             if (!isEdgeWhite(binary_image,x,y))
             {
+                //Count white cells around current index (x,y)
                 int whiteCellFound = 0;
                 for (int x1 = x + 1; x1 < x + 13; x1++)
                 {
@@ -261,7 +262,7 @@ int main(int argc, char **argv)
             {
                 break;
             }
-            DetectSpots(binary_image2, coordinates);
+            DetectandRemoveSpots(binary_image2, coordinates);
         }
         else
         {
@@ -270,7 +271,7 @@ int main(int argc, char **argv)
             {
                 break;
             }
-            DetectSpots(binary_image1, coordinates);
+            DetectandRemoveSpots(binary_image1, coordinates);
         }
     }
 
